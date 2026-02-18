@@ -1,0 +1,250 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin - AI Farm Chatbot</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{ font-family:Arial; margin:18px; background:#f4f6fb; color:#111 }
+    .card{ background:white; padding:12px; border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,0.06); margin-bottom:12px }
+    input,textarea,select{ width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #ddd }
+    button{ padding:8px 12px; border-radius:6px; border:none; background:#0b74de; color:white; cursor:pointer }
+    table{ width:100%; border-collapse:collapse; margin-top:8px }
+    th,td{ padding:8px; border-bottom:1px solid #eee; text-align:left; font-size:14px }
+    .danger{ background:#e11; }
+    .muted{ color:#666; font-size:13px }
+    .row{ display:flex; gap:10px; align-items:center }
+    .col{ flex:1 }
+  </style>
+</head>
+<body>
+  <h2>Admin Dashboard — AI Farming Chatbot</h2>
+
+  <div id="auth" class="card">
+    <div id="loginBox">
+      <h3>Admin Login</h3>
+      <input id="username" placeholder="username" value="admin">
+      <input id="password" placeholder="password" type="password" value="admin123">
+      <button id="loginBtn">Login</button>
+      <div id="loginMsg" class="muted"></div>
+    </div>
+    <div id="logoutBox" style="display:none">
+      <div class="row">
+        <div class="col">Logged in as <strong id="who"></strong></div>
+        <div><button id="logoutBtn">Logout</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main" style="display:none">
+
+    <div class="card">
+      <h3>Create / Edit Knowledge</h3>
+      <input id="k_id" type="hidden">
+      <label>Question</label>
+      <input id="q_question">
+      <label>Answer</label>
+      <textarea id="q_answer" rows="3"></textarea>
+      <div class="row">
+        <div style="flex:1">
+          <label>Intent</label>
+          <input id="q_intent">
+        </div>
+        <div style="flex:1">
+          <label>Crop</label>
+          <input id="q_crop">
+        </div>
+        <div style="flex:1">
+          <label>Language</label>
+          <select id="q_lang"><option>english</option><option>luganda</option><option>swahili</option></select>
+        </div>
+      </div>
+      <label>Topic</label>
+      <input id="q_topic">
+      <div style="margin-top:8px">
+        <button id="saveKnowledge">Save</button>
+        <button id="clearForm" style="background:#666">Clear</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Knowledge Base</h3>
+      <div class="row">
+        <input id="searchQ" placeholder="Search question...">
+        <button id="btnSearch">Search</button>
+        <button id="btnRefresh">Refresh</button>
+      </div>
+      <table id="kbTable">
+        <thead><tr><th>ID</th><th>Question</th><th>Answer</th><th>Intent</th><th>Crop</th><th>Lang</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Chat Logs</h3>
+      <div class="row">
+        <button id="btnLoadLogs">Load logs</button>
+        <button id="btnExportCsv">Export CSV</button>
+      </div>
+      <pre id="logs" style="height:200px; overflow:auto; background:#f8f8f8; padding:8px"></pre>
+    </div>
+
+  </div>
+
+<script>
+const api = {
+  login: '/admin/login',
+  logout: '/admin/logout',
+  knowledge: '/admin/knowledge',
+  chats: '/admin/chats',
+  exportChats: '/admin/chats/export'
+};
+
+let token = localStorage.getItem('admin_token') || null;
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function authHeaders(){
+  return token ? {'X-Token': token, 'Content-Type':'application/json'} : {'Content-Type':'application/json'};
+}
+
+async function doLogin(){
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  const res = await fetch(api.login, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u,password:p})});
+  if(!res.ok){ document.getElementById('loginMsg').innerText = 'Login failed'; return; }
+  const j = await res.json();
+  token = j.token;
+  localStorage.setItem('admin_token', token);
+  document.getElementById('loginMsg').innerText = 'Logged in';
+  showAdmin();
+}
+
+async function doLogout(){
+  await fetch(api.logout, {method:'POST', headers:{'X-Token': token || ''}});
+  token = null; localStorage.removeItem('admin_token');
+  hideAdmin();
+}
+
+// show/hide admin UI
+function showAdmin(){
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('logoutBox').style.display = 'block';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('who').innerText = document.getElementById('username').value;
+  loadKnowledge();
+}
+function hideAdmin(){
+  document.getElementById('loginBox').style.display = 'block';
+  document.getElementById('logoutBox').style.display = 'none';
+  document.getElementById('main').style.display = 'none';
+}
+
+// on load, if token present, try to load
+(async function init(){
+  if(token){
+    // verify by attempting to fetch knowledge
+    const res = await fetch(api.knowledge, {headers: {'X-Token': token}});
+    if(res.ok){ showAdmin(); } else { token = null; localStorage.removeItem('admin_token'); }
+  }
+})();
+
+loginBtn.onclick = doLogin;
+logoutBtn.onclick = doLogout;
+
+// Knowledge handlers
+document.getElementById('saveKnowledge').onclick = async function(){
+  const id = document.getElementById('k_id').value;
+  const payload = {
+    question: document.getElementById('q_question').value,
+    answer: document.getElementById('q_answer').value,
+    intent: document.getElementById('q_intent').value,
+    crop: document.getElementById('q_crop').value,
+    language: document.getElementById('q_lang').value,
+    topic: document.getElementById('q_topic').value
+  };
+  if(!payload.question || !payload.answer){ alert('question and answer required'); return; }
+  if(!token){ alert('not authenticated'); return; }
+  if(id){
+    // update
+    const res = await fetch(api.knowledge + '/' + id, {method:'PUT', headers: authHeaders(), body: JSON.stringify(payload)});
+    if(res.ok){ alert('Updated'); loadKnowledge(); clearForm(); }
+  } else {
+    const res = await fetch(api.knowledge, {method:'POST', headers: authHeaders(), body: JSON.stringify(payload)});
+    if(res.ok){ alert('Saved'); loadKnowledge(); clearForm(); }
+  }
+};
+
+document.getElementById('clearForm').onclick = clearForm;
+
+function clearForm(){
+  document.getElementById('k_id').value = '';
+  document.getElementById('q_question').value = '';
+  document.getElementById('q_answer').value = '';
+  document.getElementById('q_intent').value = '';
+  document.getElementById('q_crop').value = '';
+  document.getElementById('q_topic').value = '';
+}
+
+document.getElementById('btnSearch').onclick = function(){ loadKnowledge(document.getElementById('searchQ').value); };
+document.getElementById('btnRefresh').onclick = function(){ loadKnowledge(); };
+
+async function loadKnowledge(q){
+  const url = q ? api.knowledge + '?q=' + encodeURIComponent(q) : api.knowledge;
+  const res = await fetch(url, {headers: {'X-Token': token || ''}});
+  if(!res.ok){ alert('Auth required'); return; }
+  const rows = await res.json();
+  const tbody = document.querySelector('#kbTable tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.id}</td><td>${escapeHtml(r.question)}</td><td>${escapeHtml(r.answer)}</td><td>${r.intent||''}</td><td>${r.crop||''}</td><td>${r.language||''}</td>
+      <td>
+        <button onclick="editKB(${r.id})">Edit</button>
+        <button onclick="delKB(${r.id})" style="background:#e11">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+window.editKB = async function(id){
+  const res = await fetch(api.knowledge + '?q=' + id, {headers:{'X-Token': token||''}});
+  // simpler: fetch list and find
+  const all = await (await fetch(api.knowledge, {headers:{'X-Token': token||''}})).json();
+  const item = all.find(x=>x.id===id);
+  if(!item) return alert('Not found');
+  document.getElementById('k_id').value = item.id;
+  document.getElementById('q_question').value = item.question;
+  document.getElementById('q_answer').value = item.answer;
+  document.getElementById('q_intent').value = item.intent || '';
+  document.getElementById('q_crop').value = item.crop || '';
+  document.getElementById('q_lang').value = item.language || 'english';
+  document.getElementById('q_topic').value = item.topic || '';
+};
+
+window.delKB = async function(id){
+  if(!confirm('Delete item '+id+'?')) return;
+  const res = await fetch(api.knowledge + '/' + id, { method:'DELETE', headers: {'X-Token': token || ''} });
+  if(res.ok){ alert('Deleted'); loadKnowledge(); }
+};
+
+// Chats
+document.getElementById('btnLoadLogs').onclick = async function(){
+  const res = await fetch(api.chats, {headers: {'X-Token': token || ''}});
+  if(!res.ok) return alert('Auth required');
+  const js = await res.json();
+  document.getElementById('logs').innerText = JSON.stringify(js, null, 2);
+};
+
+document.getElementById('btnExportCsv').onclick = function(){
+  window.location = api.exportChats + (token ? ('?') : '');
+};
+
+// helpers
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+question,answer,intent,crop,language,topic
+how to plant maize,Plant maize in well prepared soil with proper spacing,planting,maize,english,crop farming
+how to control pests in tomatoes,Use recommended pesticides and remove affected leaves,pest_disease,tomato,english,crop protection
+best fertilizer for beans,Use NPK fertilizer and organic manure,fertilizer,beans,english,soil fertility
+how to rear chickens,Provide clean water good feed and vaccination,animal_rearing,chicken,english,livestock
+kasooli zimera zitya,Seed beans in rows with spacing,planting,beans,luganda,crop farming
+enkoko ziruuma endwadde,Use vaccines and proper feeding,pest_disease,chicken,luganda,livestock
+
+how to plant maize,nsimba ntya kasooli,Plant maize at the start of rain using good seeds.,Simba kasooli ng’enkuba etandise ng’okozesa embewu ennungi.,maize,,planting
+how deep should maize be planted,kasooli asimbibwa mu bunene ki,Plant maize 5cm deep.,Kasooli asimbibwa mu bugumu bwa centimeters 5.,maize,,planting
+best spacing for maize,akasolo akasiindika ka kasooli,Space maize 75cm by 30cm.,Teeka kasooli ku kibanako kya 75x30cm.,maize,,planting
+how long does maize take to grow,kasooli atwala kiseera ki,Maize takes 3 to 4 months to mature.,Kasooli atwala emyezi 3 okutuuka ku 4.,maize,,general
+how to store maize safely,okutereka kasooli bulungi,Dry maize well and store in sacks.,Yoomya kasooli bulungi oguteeke mu nsawo.,maize,,storage
+
+how to plant beans,nsimba ntya bijanjaalo,Plant beans in fertile loose soil.,Simba ebijanjaalo mu ttaka eddungi.,beans,,planting
+how long do beans take to grow,bijanjaalo bitwala kiseera ki,Beans mature in 2 to 3 months.,Bikula mu myezi 2 okutuuka ku 3.,beans,,general
+what fertilizer is good for beans,ddagala ki erisinga ku bijanjaalo,Use compost or cow dung.,Kozesa ebisaaniiko bya mte.,beans,,fertilizer
+why beans turn yellow,lwaki bijanjaalo bifuuka ennyellow,Due to lack of nutrients.,Kiva ku butaba na bibala mu ttaka.,beans,,pest_disease
+how to control pests in beans,ntya ntya okuzibira ebiwuka mu bijanjaalo,Use pesticides and remove infected plants.,Kozesa eddagala oggyemu ebirwadde.,beans,,pest_disease
+
+how to plant tomatoes,nsimba ntya ennyaanya,Plant tomatoes with manure.,Simba ennyaanya ng’otadde ebisaaniiko.,tomato,,planting
+best fertilizer for tomatoes,ddagala erisinga ku nnyaanya,Use DAP fertilizer.,Kozesa eddagala lya DAP.,tomato,,fertilizer
+why tomatoes rot,lwaki ennyaanya zivunda,Due to excess water.,Kiva ku mazzi mangi.,tomato,,pest_disease
+how to store tomatoes,ntya okutereka ennyaanya,Store in a cool dry place.,Zitereke mu kifo ekinyogovu.,tomato,,storage
+how long tomatoes take to grow,ennyaanya zitwala ki,Tomatoes mature in 3 months.,Zikula mu myezi 3.,tomato,,general
+
+how to plant cassava,nsimba ntya muwogo,Use healthy cassava cuttings.,Kozesa emisale gya muwogo emilamu.,cassava,,planting
+cassava diseases,endwadde za muwogo,Cassava suffers from mosaic disease.,Muwogo alina obulwadde bwa mosaic.,cassava,,pest_disease
+cassava fertilizer,ddagala lya muwogo,Use NPK fertilizer.,Kozesa eddagala lya NPK.,cassava,,fertilizer
+how long cassava grows,muwogo atwala ki,Cassava matures in 10–12 months.,Muwogo akula mu myezi 10 okutuuka ku 12.,cassava,,general
+how to harvest cassava,okukungula muwogo,Harvest after 10 months.,Kungula muwogo nga wayise emyezi 10.,cassava,,harvesting
+
+how to rear chickens,okulunda enkoko ntya,Provide food water and shelter.,Baawa amazzi emmere n’ennyumba.,,chicken,general
+what food is good for chickens,emmeere ennungi ku nkoko,Feed maize bran and greens.,Baawa kasooli n’ebyoya ebirungi.,,chicken,general
+chicken diseases,endwadde z’enkoko,Chickens suffer from Newcastle disease.,Enkoko zirwala Newcastle.,,chicken,pest_disease
+how to prevent chicken diseases,okuzibira endwadde z’enkoko,Vaccinate regularly.,Zikubire eddagala buli kaseera.,,chicken,pest_disease
+when chickens lay eggs,enkoko etandika ddi okuggyamu amagi,At 5–6 months.,Ku myezi 5 okutuuka ku 6.,,chicken,general
+
+how to take care of cows,okulabirira ente ntya,Feed properly and give water.,Ziwe emmere n’amazzi bulungi.,,cow,general
+what food is good for cows,emmeere ennungi ku nte,Grass and salt block.,Esubi n’omusenyu.,,cow,general
+cow diseases,endwadde z’ente,Cows suffer from foot and mouth.,Ente zirwala foot and mouth.,,cow,pest_disease
+how to increase milk in cows,okwongeza amata mu nte,Feed protein-rich feeds.,Ziwe emmere erimu protein.,,cow,general
+how to prevent cow diseases,okuzibira endwadde z’ente,Use vaccination and deworming.,Zikubire eddagala n’okuziggyamu ebisolo.,,cow,pest_disease
+
+what is irrigation,enkola y’okuwesa amazzi,Supplying water to crops artificially.,Kuwa amazzi mu nkola ey’ekikozesebwa.,general,,general
+what is crop rotation,okukyusa ebimera,Growing different crops each season.,Okusimba ekimera ekirala buli kiseera.,general,,general
+what is mulching,okubikka ettaka,Covering soil with dry grass.,Kubikka ettaka n’ebisukiddwako.,general,,general
+how to control weeds,okufuuwa embirigi,Use hand hoe or herbicides.,Kozesa essika oba eddagala.,general,,general
+how to increase crop yield,okwongeza ebiva mu nnimiro,Use good seeds and fertilizer.,Kozesa embewu n’eddagala.,general,,general

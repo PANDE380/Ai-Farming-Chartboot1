@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — AI Farming Chatbot</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0b74de;
+      --danger:#e02424; --success:#16a34a;
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:#0f172a;}
+    .app{ display:grid; grid-template-columns:260px 1fr; min-height:100vh; gap:18px; padding:18px; }
+    .sidebar{ background:var(--card); border-radius:12px; padding:14px; box-shadow:0 6px 18px rgba(2,6,23,0.06);}
+    .logo{ font-weight:700; color:var(--accent); margin-bottom:10px; display:flex; gap:8px; align-items:center;}
+    .nav{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+    .nav button{ background:transparent; border:none; text-align:left; padding:10px; border-radius:8px; cursor:pointer; font-weight:600; color:#0f172a;}
+    .nav button.active{ background:linear-gradient(90deg,var(--accent),#0a62c8); color:white;}
+    .card{ background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(2,6,23,0.04);}
+    header{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;}
+    .btn{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:var(--accent); color:white; font-weight:600;}
+    .btn.ghost{ background:transparent; color:var(--accent); border:1px solid #e6eefc; }
+    .grid{ display:grid; grid-template-columns:1fr 360px; gap:12px;}
+    table{ width:100%; border-collapse:collapse; font-size:14px;}
+    table th, table td{ padding:8px 10px; border-bottom:1px solid #f1f5f9; text-align:left;}
+    .form-row{ display:flex; gap:8px; align-items:center; }
+    input, select, textarea{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #e6eefc; }
+    .muted{ color:var(--muted); font-size:13px;}
+    .small{ font-size:13px; color:var(--muted); }
+    .topbar{ display:flex; gap:8px; align-items:center; justify-content:flex-end;}
+    .token{ font-family:monospace; font-size:12px; background:#f3f6ff; padding:6px 10px; border-radius:8px;}
+    .chat-list{ max-height:520px; overflow:auto; }
+    .chat-row{ padding:10px; border-bottom:1px solid #f1f5f9; }
+    .danger{ background:var(--danger); color:white;}
+    footer.small{ margin-top:12px; font-size:12px; color:var(--muted); text-align:center; }
+    /* responsive */
+    @media(max-width:880px){
+      .app{ grid-template-columns:1fr; padding:12px; }
+      .grid{ grid-template-columns:1fr; }
+      .sidebar{ display:flex; gap:8px; overflow:auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar card">
+      <div class="logo">
+        <img src="https://cdn-icons-png.flaticon.com/512/620/620851.png" alt="logo" width="36" height="36">
+        <div>
+          <div style="font-size:16px">AI Farming Admin</div>
+          <div class="small muted">Manage KB • Chats • Users</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small muted">Admin token</div>
+        <div id="tokenBox" class="token" style="margin-top:8px">Not logged</div>
+      </div>
+
+      <div class="nav" style="margin-top:16px">
+        <button id="navDashboard" class="active" onclick="nav('dashboard')">Dashboard</button>
+        <button id="navKnowledge" onclick="nav('knowledge')">Knowledge Base</button>
+        <button id="navChats" onclick="nav('chats')">Chats</button>
+        <button id="navUsers" onclick="nav('users')">Users</button>
+        <button id="navSettings" onclick="nav('settings')">Settings</button>
+      </div>
+
+      <div style="margin-top:14px">
+        <button class="btn" onclick="logout()">Logout</button>
+      </div>
+
+      <div style="margin-top:12px" class="small muted">
+        Server: <span id="serverBase">/</span>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <!-- LOGIN CARD (modal-like at top if not logged) -->
+      <div id="loginCard" class="card" style="margin-bottom:12px;">
+        <header>
+          <div>
+            <strong>Admin login</strong><div class="small muted">Sign in to manage knowledge & chats</div>
+          </div>
+          <div class="topbar">
+            <input id="adminUser" placeholder="username" style="width:120px"/>
+            <input id="adminPass" placeholder="password" type="password" style="width:160px"/>
+            <button class="btn" onclick="adminLogin()">Sign in</button>
+          </div>
+        </header>
+        <div class="small muted">Default admin account: <strong>admin</strong> / <strong>admin123</strong></div>
+      </div>
+
+      <!-- CONTENT (pages) -->
+      <div id="contentArea" class="card">
+        <!-- Dashboard -->
+        <div id="page_dashboard">
+          <header>
+            <div>
+              <h3 style="margin:0">Dashboard</h3>
+              <div class="small muted">Quick stats & actions</div>
+            </div>
+            <div>
+              <button class="btn" onclick="fetchKnowledge()">Refresh KB</button>
+              <button class="btn" onclick="fetchChats()">Refresh Chats</button>
+            </div>
+          </header>
+
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <div style="flex:1" class="card">
+              <strong>Knowledge base</strong>
+              <div id="kbCount" class="small muted">Loading…</div>
+            </div>
+            <div style="width:260px" class="card">
+              <strong>Latest chats</strong>
+              <div id="recentChats" class="small muted">Loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Knowledge management -->
+        <div id="page_knowledge" style="display:none">
+          <header>
+            <div><h3 style="margin:0">Knowledge Base</h3><div class="small muted">Add / edit / delete knowledge</div></div>
+            <div><button class="btn" onclick="showCreateForm()">New Entry</button></div>
+          </header>
+
+          <div style="margin-top:12px;">
+            <div style="display:flex; gap:12px;">
+              <input id="qSearch" placeholder="Search question..." onkeydown="if(event.key==='Enter') fetchKnowledge()" />
+              <button class="btn ghost" onclick="fetchKnowledge()">Search</button>
+            </div>
+            <div style="margin-top:12px;">
+              <table id="kbTable">
+                <thead><tr><th>ID</th><th>Question</th><th>Intent</th><th>Crop</th><th>Language</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chats -->
+        <div id="page_chats" style="display:none">
+          <header>
+            <div><h3 style="margin:0">Chats</h3><div class="small muted">View recent user chats</div></div>
+            <div><button class="btn" onclick="exportChats()">Export CSV</button></div>
+          </header>
+
+          <div style="margin-top:12px;">
+            <div id="chatRows" class="chat-list">Loading chats…</div>
+          </div>
+        </div>
+
+        <!-- Users placeholder -->
+        <div id="page_users" style="display:none">
+          <header><div><h3 style="margin:0">Users</h3><div class="small muted">Manage users</div></div>
+            <div><button class="btn" onclick="alert('Use DB / extend API')">Create user</button></div>
+          </header>
+
+          <div style="margin-top:12px;">
+            <div id="userRows">(Users listing placeholder — you can extend API to manage users.)</div>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div id="page_settings" style="display:none">
+          <header><div><h3 style="margin:0">Settings</h3><div class="small muted">Admin options</div></div>
+            <div></div>
+          </header>
+
+          <div style="margin-top:12px;">
+            <div style="display:grid; grid-template-columns:1fr 340px; gap:12px;">
+              <div class="card">
+                <h4>Server configuration</h4>
+                <div class="small muted">Base API URL (defaults to same origin)</div>
+                <input id="baseApi" placeholder="/"/>
+                <div style="margin-top:8px"><button class="btn" onclick="saveBase()">Save</button></div>
+              </div>
+
+              <div class="card">
+                <h4>Admin token</h4>
+                <div class="small muted">Use this token for API calls</div>
+                <div style="margin-top:8px"><button class="btn" onclick="copyToken()">Copy token</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <footer class="small muted">Admin dashboard • AI Farming Chatbot</footer>
+    </main>
+  </div>
+
+<script>
+  // ---------- small helpers ----------
+  const STORAGE_KEY = "af_admin_token";
+  let adminToken = localStorage.getItem(STORAGE_KEY) || null;
+  let API_BASE = localStorage.getItem("af_api_base") || "";
+
+  document.getElementById("serverBase").innerText = API_BASE || "/";
+
+  if(adminToken){
+    document.getElementById("tokenBox").innerText = adminToken;
+    document.getElementById("loginCard").style.display = "none";
+  }
+
+  function nav(page){
+    // update active
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+    const map = {
+      dashboard:"navDashboard", knowledge:"navKnowledge", chats:"navChats", users:"navUsers", settings:"navSettings"
+    };
+    document.getElementById(map[page]).classList.add("active");
+    // show page
+    document.querySelectorAll("#contentArea > div").forEach(d=>d.style.display="none");
+    document.getElementById("page_"+page).style.display = "block";
+    if(page==="knowledge") fetchKnowledge();
+    if(page==="chats") fetchChats();
+    if(page==="dashboard") fetchDashboard();
+  }
+
+  async function adminLogin(){
+    const u = document.getElementById("adminUser").value.trim();
+    const p = document.getElementById("adminPass").value.trim();
+    if(!u||!p){ alert("enter username & password"); return; }
+    try{
+      const res = await fetch((API_BASE||"") + "/admin/login", {
+        method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({username:u,password:p})
+      });
+      if(!res.ok){
+        const j = await res.json().catch(()=>({detail:"Login failed"}));
+        alert("Login failed: "+ (j.detail||""));
+        return;
+      }
+      const j = await res.json();
+      adminToken = j.token;
+      localStorage.setItem(STORAGE_KEY, adminToken);
+      document.getElementById("tokenBox").innerText = adminToken;
+      document.getElementById("loginCard").style.display = "none";
+      fetchDashboard();
+      alert("Logged in");
+    }catch(e){ alert("Login error: "+e.message) }
+  }
+
+  function logout(){
+    if(!adminToken) return alert("Not logged in");
+    fetch((API_BASE||"") + "/admin/logout", {method:"POST", headers:{ "x-token": adminToken }});
+    localStorage.removeItem(STORAGE_KEY);
+    adminToken = null;
+    document.getElementById("tokenBox").innerText = "Not logged";
+    document.getElementById("loginCard").style.display = "block";
+    alert("Logged out");
+  }
+
+  function apiHeaders(){
+    const headers = {"Content-Type":"application/json"};
+    if(adminToken) headers["x-token"] = adminToken;
+    return headers;
+  }
+
+  // ---------- Knowledge ----------
+  async function fetchKnowledge(){
+    const q = document.getElementById("qSearch").value || "";
+    const url = (API_BASE||"") + "/admin/knowledge" + (q ? "?q="+encodeURIComponent(q):"");
+    const res = await fetch(url, {headers: apiHeaders()});
+    if(!res.ok){ handleApiError(res); return; }
+    const rows = await res.json();
+    const tbody = document.querySelector("#kbTable tbody");
+    tbody.innerHTML = "";
+    rows.forEach(r=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.id}</td><td>${escapeHtml(r.question)}</td><td>${r.intent||""}</td><td>${r.crop||""}</td><td>${r.language||""}</td>
+        <td>
+          <button class="btn" onclick="showEdit(${r.id})">Edit</button>
+          <button class="btn ghost" onclick="deleteKb(${r.id})">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById("kbCount").innerText = rows.length + " entries";
+    // recent for dashboard
+    const rec = rows.slice(0,5).map(x=>`#${x.id} ${x.question}`).join("<br>");
+    document.getElementById("recentChats").innerHTML = rec || "<span class='small muted'>No entries</span>";
+  }
+
+  function showCreateForm(){
+    const q = prompt("Question (English):");
+    if(!q) return;
+    const a = prompt("Answer (English):");
+    if(a===null) return;
+    const intent = prompt("Intent (planting / pest_disease / fertilizer / general):","");
+    const crop = prompt("Crop (maize / tomato) - optional","");
+    createKb({question:q,answer:a,intent:intent||"",crop:crop||"",language:"english"});
+  }
+
+  async function createKb(obj){
+    const res = await fetch((API_BASE||"") + "/admin/knowledge", {method:"POST", headers:apiHeaders(), body: JSON.stringify(obj)});
+    if(!res.ok){ handleApiError(res); return; }
+    alert("Created");
+    fetchKnowledge();
+  }
+
+  async function showEdit(id){
+    // fetch single -> open prompts
+    const rows = await fetch((API_BASE||"") + "/admin/knowledge", {headers:apiHeaders()}).then(r=>r.json());
+    const r = rows.find(x=>x.id===id);
+    if(!r) return alert("Not found");
+    const q = prompt("Question:", r.question);
+    if(q===null) return;
+    const a = prompt("Answer:", r.answer);
+    if(a===null) return;
+    const intent = prompt("Intent:", r.intent||"");
+    const crop = prompt("Crop:", r.crop||"");
+    const item = {question:q, answer:a, intent:intent||"", crop:crop||"", language:r.language||"english"};
+    const res = await fetch((API_BASE||"") + "/admin/knowledge/" + id, { method:"PUT", headers: apiHeaders(), body: JSON.stringify(item) });
+    if(!res.ok){ handleApiError(res); return; }
+    alert("Updated");
+    fetchKnowledge();
+  }
+
+  async function deleteKb(id){
+    if(!confirm("Delete entry #"+id+"?")) return;
+    const res = await fetch((API_BASE||"") + "/admin/knowledge/" + id, { method:"DELETE", headers: apiHeaders() });
+    if(!res.ok){ handleApiError(res); return; }
+    alert("Deleted");
+    fetchKnowledge();
+  }
+
+  // ---------- Chats ----------
+  async function fetchChats(){
+    const res = await fetch((API_BASE||"") + "/admin/chats?limit=100", { headers: apiHeaders() });
+    if(!res.ok){ handleApiError(res); return; }
+    const rows = await res.json();
+    const container = document.getElementById("chatRows");
+    container.innerHTML = "";
+    if(rows.length===0) container.innerHTML = "<div class='small muted'>No chats logged</div>";
+    rows.slice().reverse().forEach(r=>{
+      const d = document.createElement("div");
+      d.className = "chat-row";
+      d.innerHTML = `<div><strong>${new Date((r.ts||0)*1000).toLocaleString()}</strong> <span class="small muted">(${r.lang})</span></div>
+        <div style="margin-top:6px"><strong>User:</strong> ${escapeHtml(r.message)}</div>
+        <div style="margin-top:6px"><strong>Bot:</strong> ${escapeHtml(r.reply)}</div>`;
+      container.appendChild(d);
+    });
+  }
+
+  async function exportChats(){
+    const res = await fetch((API_BASE||"") + "/admin/chats/export", { headers: apiHeaders() });
+    if(!res.ok){ handleApiError(res); return; }
+    // download
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "chat_export.csv"; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // ---------- Dashboard ----------
+  async function fetchDashboard(){
+    // quick counts
+    const res = await fetch((API_BASE||"") + "/admin/knowledge", { headers: apiHeaders() });
+    if(!res.ok){ /* ignore if not logged */ return; }
+    const rows = await res.json();
+    document.getElementById("kbCount").innerText = rows.length + " knowledge entries";
+    const recent = rows.slice(0,5).map(x=>`#${x.id} ${escapeHtml(x.question)}`).join("<br>");
+    document.getElementById("recentChats").innerHTML = recent || "<span class='small muted'>No entries</span>";
+  }
+
+  // ---------- Settings ----------
+  function saveBase(){
+    API_BASE = document.getElementById("baseApi").value.trim();
+    localStorage.setItem("af_api_base", API_BASE);
+    document.getElementById("serverBase").innerText = API_BASE||"/";
+    alert("Saved");
+  }
+
+  function copyToken(){
+    if(!adminToken) return alert("Not logged in");
+    navigator.clipboard.writeText(adminToken).then(()=>alert("Token copied"));
+  }
+
+  // ---------- Utils ----------
+  function handleApiError(res){
+    res.text().then(t=>{
+      let m="API error";
+      try{ m = JSON.parse(t).detail || t }catch(e){ m = t }
+      alert("API error: "+m);
+      if(res.status===401) { localStorage.removeItem(STORAGE_KEY); adminToken=null; document.getElementById("loginCard").style.display="block"; }
+    });
+  }
+
+  function escapeHtml(s){ if(!s) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+
+  // ---------- start ----------
+  nav("dashboard");
+</script>
+</body>
+</html>

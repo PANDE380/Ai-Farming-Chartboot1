@@ -1,0 +1,11 @@
+{
+  "name": "AI Farming Chatbot",
+  "short_name": "AI Farm Bot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b74de",
+  "theme_color": "#0b74de",
+  "icons": [
+    {"src": "https://cdn-icons-png.flaticon.com/512/4712/4712027.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
