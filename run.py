@@ -31,7 +31,11 @@ except Exception as e:
 if __name__ == "__main__":
     import uvicorn
     print("\n🚀 Starting AI Farming Chatbot...")
-    print("📖 Admin panel: http://localhost:8000")
-    print("💬 Chat endpoint: http://localhost:8000/chat")
+    print("\n📍 Application URLs:")
+    print("   Home: http://localhost:8000")
+    print("   Signup: http://localhost:8000/signup")
+    print("   Login: http://localhost:8000/login")
+    print("   Chat: http://localhost:8000/chat")
+    print("   Admin: http://localhost:8000/admin (login: admin/admin123)")
     print("\n✓ Server running. Press Ctrl+C to stop.\n")
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=False)

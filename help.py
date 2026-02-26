@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-🌾 AI FARMING CHATBOT - QUICK REFERENCE GUIDE
+ AI FARMING CHATBOT - QUICK REFERENCE GUIDE
 
 Use this as your go-to guide for running the chatbot.
 """
 
 QUICK_START = """
 ╔═══════════════════════════════════════════════════════════╗
-║           🌾 AI FARMING CHATBOT - QUICK START             ║
+║            AI FARMING CHATBOT - QUICK START             ║
 ╚═══════════════════════════════════════════════════════════╝
 
 📌 FASTEST WAY TO GET STARTED:
@@ -21,7 +21,7 @@ QUICK_START = """
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔧 MANUAL SETUP (if you prefer):
+ MANUAL SETUP (if you prefer):
 
   pip install -r requirements.txt
   python setup.py
@@ -29,13 +29,13 @@ QUICK_START = """
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🧪 VERIFY SYSTEM WORKS:
+ VERIFY SYSTEM WORKS:
 
   python test_diagnose.py
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 IMPORT YOUR FARMING DATA:
+  IMPORT YOUR FARMING DATA:
 
   python import_dataset.py
 
@@ -75,7 +75,7 @@ API_EXAMPLES = """
 ║              API USAGE EXAMPLES                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
-1️⃣  CHAT WITH THE BOT:
+1  CHAT WITH THE BOT:
 
    GET /chat?message=How+to+grow+rice
    
@@ -94,7 +94,7 @@ API_EXAMPLES = """
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2️⃣  ADMIN LOGIN:
+2  ADMIN LOGIN:
 
    POST /admin/login
    {
@@ -111,7 +111,7 @@ API_EXAMPLES = """
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-3️⃣  ADD KNOWLEDGE ENTRY:
+3  ADD KNOWLEDGE ENTRY:
 
    POST /admin/knowledge
    X-Token: {token}
@@ -125,14 +125,14 @@ API_EXAMPLES = """
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-4️⃣  LIST KNOWLEDGE ENTRIES:
+4  LIST KNOWLEDGE ENTRIES:
 
    GET /admin/knowledge?q=maize
    X-Token: {token}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-5️⃣  SIGN UP NEW USER:
+5  SIGN UP NEW USER:
 
    POST /signup
    {
@@ -270,7 +270,7 @@ def show_menu():
     while True:
         print("""
 ╔═══════════════════════════════════════════════════════════╗
-║         🌾 AI FARMING CHATBOT - HELP MENU                ║
+║          AI FARMING CHATBOT - HELP MENU                ║
 ╚═══════════════════════════════════════════════════════════╝
 
   1. Quick Start Guide
@@ -304,7 +304,7 @@ Select an option (1-8): """)
             print("\n👋 Goodbye!\n")
             break
         else:
-            print("\n❌ Invalid option. Please enter 1-8.\n")
+            print("\n Invalid option. Please enter 1-8.\n")
         
         input("\nPress Enter to continue...")
 

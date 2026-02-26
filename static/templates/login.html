@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - AI Farming Chatbot</title>
+    <title>Sign In - AI Farming Chatbot</title>
     <style>
         :root {
             --primary: #16a34a;
@@ -102,7 +102,7 @@
         .btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(90deg, var(--primary), #0a62c8);
+            background: linear-gradient(90deg, var(--primary), #15803d);
             color: white;
             border: none;
             border-radius: 8px;
@@ -115,7 +115,7 @@
         
         .btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(11, 116, 222, 0.2);
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
         }
         
         .btn:disabled {
@@ -161,37 +161,48 @@
         .footer a:hover {
             text-decoration: underline;
         }
+        
+        .demo-info {
+            background: #f0f9ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #0f172a;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .demo-info strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="logo"><span><img src="static/images/PP.png" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
-            <h1>Join the Community</h1>
-            <p class="subtitle">Get help with your farming challenges</p>
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Sign in to your account</p>
         </div>
         
         <div id="message" class="message"></div>
         
-        <form id="signupForm" onsubmit="handleSignup(event)">
+        <div class="demo-info">
+            <strong>Demo Account</strong>
+            Username: <code>demo</code><br>
+            Password: <code>demo123</code>
+        </div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input 
                     type="text" 
                     id="username" 
                     name="username" 
-                    placeholder="Pick a username"
-                    required
-                >
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    placeholder="your@email.com"
+                    placeholder="Enter your username"
                     required
                 >
             </div>
@@ -207,11 +218,11 @@
                 >
             </div>
             
-            <button type="submit" class="btn" id="submitBtn">Get Started</button>
+            <button type="submit" class="btn" id="submitBtn">Sign In</button>
         </form>
         
         <div class="footer">
-            Already have an account? <a href="/login">Sign in</a>
+            Don't have an account? <a href="/signup">Create one</a>
         </div>
     </div>
     
@@ -227,43 +238,29 @@
             }, 5000);
         }
         
-        function validateForm() {
-            const username = document.getElementById("username").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
-            
-            return username && email && password;
-        }
-        
-        document.getElementById("username").addEventListener("input", validateForm);
-        document.getElementById("email").addEventListener("input", validateForm);
-        document.getElementById("password").addEventListener("input", validateForm);
-        
-        async function handleSignup(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             
-            if (!validateForm()) {
-                showMessage("Please fix validation errors", "error");
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            
+            if (!username || !password) {
+                showMessage("Please enter username and password", "error");
                 return;
             }
             
-            const username = document.getElementById("username").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
-            
             const submitBtn = document.getElementById("submitBtn");
             submitBtn.disabled = true;
-            submitBtn.textContent = "Creating...";
+            submitBtn.textContent = "Signing in...";
             
             try {
-                const response = await fetch((API_BASE || "") + "/signup", {
+                const response = await fetch((API_BASE || "") + "/user/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         username,
-                        email,
                         password
                     })
                 });
@@ -271,24 +268,26 @@
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    showMessage(`Error: ${data.detail || "Signup failed"}`, "error");
+                    showMessage(`Error: ${data.detail || "Login failed"}`, "error");
                     submitBtn.disabled = false;
-                    submitBtn.textContent = "Create Account";
+                    submitBtn.textContent = "Sign In";
                     return;
                 }
                 
-                showMessage("Account created successfully! Redirecting...", "success");
+                // Store token
+                localStorage.setItem("af_user_token", data.token);
+                localStorage.setItem("af_username", data.username);
+                
+                showMessage("Login successful! Redirecting...", "success");
                 setTimeout(() => {
-                    window.location.href = "/login";
-                }, 2000);
+                    window.location.href = "/chat";
+                }, 1500);
             } catch (error) {
                 showMessage(`Error: ${error.message}`, "error");
                 submitBtn.disabled = false;
-                submitBtn.textContent = "Create Account";
+                submitBtn.textContent = "Sign In";
             }
         }
-        
-        validateForm();
     </script>
 </body>
 </html>

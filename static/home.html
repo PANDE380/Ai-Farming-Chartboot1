@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Farming Chatbot - Welcome</title>
+    <style>
+        :root {
+            --primary: #16a34a;
+            --success: #16a34a;
+            --bg: #f6f7fb;
+            --card: #fff;
+            --muted: #6b7280;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, #dcfce7 100%);
+            min-height: 100vh;
+            color: #0f172a;
+        }
+        
+        .navbar {
+            background: var(--card);
+            border-bottom: 1px solid #f0fdf4;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(2, 6, 23, 0.05);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 18px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), #15803d);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(22, 163, 74, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid #f0fdf4;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0fdf4;
+        }
+        
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1200px;
+            margin: 60px auto;
+            gap: 40px;
+            padding: 0 20px;
+            align-items: center;
+        }
+        
+        .hero-content h1 {
+            font-size: 48px;
+            margin-bottom: 16px;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--primary), #15803d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-content p {
+            font-size: 18px;
+            color: var(--muted);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .hero-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hero-image img {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .features {
+            max-width: 1200px;
+            margin: 80px auto 0;
+            padding: 60px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(2, 6, 23, 0.08);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(22, 163, 74, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .feature-card h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #0f172a;
+        }
+        
+        .feature-card p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary), #15803d);
+            color: white;
+            margin: 80px 20px 0;
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+        
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .cta-section .btn {
+            background: white;
+            color: var(--primary);
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        
+        .cta-section .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero {
+                grid-template-columns: 1fr;
+                margin: 40px auto;
+            }
+            
+            .hero-content h1 {
+                font-size: 32px;
+            }
+            
+            .hero-content p {
+                font-size: 16px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+            }
+            
+            .cta-section h2 {
+                font-size: 24px;
+            }
+            
+            .nav-links {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <span><img src="static/images/PP.png" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span>
+            <span>AI Farming Assistant</span>
+        </div>
+        <div class="nav-links">
+            <button class="btn btn-secondary" onclick="window.location.href='/login'">Sign In</button>
+            <button class="btn btn-primary" onclick="window.location.href='/signup'">Get Started</button>
+            <button class="btn btn-secondary" onclick="window.location.href='/admin'">Admin</button>
+        </div>
+    </div>
+    
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Your Farm is your Way.</h1>
+            <p>Real farming advice when you need it. No marketing but just honest help from someone who gets it.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="window.location.href='/signup'">Start Free</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/login'">Sign In</button>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="static/images/Farm.avif" alt="Green tractor in field" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(2, 6, 23, 0.15); max-width: 100%;">
+        </div>
+    </div>
+    
+    <div class="features">
+        <div class="feature-card" onclick="navigateToChat()">
+            <div class="feature-icon"><span><img src="static/images/TalkAboutIt.jpg" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
+            <h3>Talk About Real Issues</h3>
+            <p>Got a disease? Watering questions? Bugs everywhere? Tell me what's happening and we'll work it out.</p>
+        </div>
+        <div class="feature-card" onclick="navigateToChat()">
+            <div class="feature-icon"><span><img src="static/images/Guidance.jpg" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
+            <h3>Honest Guidance</h3>
+            <p>Not some textbook answers. Real advice based on what actually works in the field.</p>
+        </div>
+        <div class="feature-card" onclick="navigateToChat()">
+            <div class="feature-icon"><span><img src="static/images/Uganda.jpg" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
+            <h3>Language Support</h3>
+            <p>Chat in your language—Ugandan tongues plus French, Arabic, and Hindi. We speak them all.</p>
+        </div>
+        <div class="feature-card" onclick="navigateToChat()">
+            <div class="feature-icon"><span><img src="static/images/Available.webp" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
+            <h3>Always Available</h3>
+            <p>Farm problems don't keep business hours. Neither do we. Chat anytime.</p>
+        </div>
+        <div class="feature-card" onclick="navigateToChat()">
+            <div class="feature-icon"><span><img src="static/images/Learn&Grow.webp" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
+            <h3>Learn & Grow</h3>
+            <p>Every question builds your farming knowledge. We make learning practical.</p>
+        </div>
+        <div class="feature-card" onclick="navigateToChat()">
+            <div class="feature-icon"><span><img src="static/images/Simple.webp" alt="AI Farming Assistant Logo" style="width: 90px; height: 80px;"></span></div>
+            <h3>Simple & Straightforward</h3>
+            <p>No complex dashboards. Just ask your question and get an answer.</p>
+        </div>
+    </div>
+    
+    <div class="cta-section">
+        <h2>Let's Get to Work</h2>
+        <p>Your farming questions deserve real answers. Join now.</p>
+        <button class="btn" onclick="window.location.href='/signup'">Sign Up Free</button>\n    </div>
+    </div>
+    
+    <footer>
+        <p>Made by farmers, for farmers. © 2024</p>
+    </footer>
+    
+    <script>
+        function navigateToChat() {
+            // Check if user is logged in
+            const token = localStorage.getItem('af_user_token');
+            if (token) {
+                // Already logged in, go to chat
+                window.location.href = '/chat';
+            } else {
+                // Not logged in, redirect to login or signup
+                window.location.href = '/signup';
+            }
+        }
+    </script>
+</body>
+</html>

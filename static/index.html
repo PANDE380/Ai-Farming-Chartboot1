@@ -6,7 +6,7 @@
   <title>Admin — AI Farming Chatbot</title>
   <style>
     :root{
-      --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#0b74de;
+      --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#16a34a;
       --danger:#e02424; --success:#16a34a;
     }
     *{box-sizing:border-box}
@@ -16,22 +16,22 @@
     .logo{ font-weight:700; color:var(--accent); margin-bottom:10px; display:flex; gap:8px; align-items:center;}
     .nav{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
     .nav button{ background:transparent; border:none; text-align:left; padding:10px; border-radius:8px; cursor:pointer; font-weight:600; color:#0f172a;}
-    .nav button.active{ background:linear-gradient(90deg,var(--accent),#0a62c8); color:white;}
+    .nav button.active{ background:linear-gradient(90deg,var(--accent),#15803d); color:white;}
     .card{ background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(2,6,23,0.04);}
     header{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;}
     .btn{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:var(--accent); color:white; font-weight:600;}
-    .btn.ghost{ background:transparent; color:var(--accent); border:1px solid #e6eefc; }
+    .btn.ghost{ background:transparent; color:var(--accent); border:1px solid #f0fdf4; }
     .grid{ display:grid; grid-template-columns:1fr 360px; gap:12px;}
     table{ width:100%; border-collapse:collapse; font-size:14px;}
-    table th, table td{ padding:8px 10px; border-bottom:1px solid #f1f5f9; text-align:left;}
+    table th, table td{ padding:8px 10px; border-bottom:1px solid #dcfce7; text-align:left;}
     .form-row{ display:flex; gap:8px; align-items:center; }
-    input, select, textarea{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #e6eefc; }
+    input, select, textarea{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #f0fdf4; }
     .muted{ color:var(--muted); font-size:13px;}
     .small{ font-size:13px; color:var(--muted); }
     .topbar{ display:flex; gap:8px; align-items:center; justify-content:flex-end;}
-    .token{ font-family:monospace; font-size:12px; background:#f3f6ff; padding:6px 10px; border-radius:8px;}
+    .token{ font-family:monospace; font-size:12px; background:#f0fdf4; padding:6px 10px; border-radius:8px;}
     .chat-list{ max-height:520px; overflow:auto; }
-    .chat-row{ padding:10px; border-bottom:1px solid #f1f5f9; }
+    .chat-row{ padding:10px; border-bottom:1px solid #dcfce7; }
     .danger{ background:var(--danger); color:white;}
     footer.small{ margin-top:12px; font-size:12px; color:var(--muted); text-align:center; }
     /* responsive */

@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from models import SessionLocal, Knowledge, User
-import hashlib, re, json, os, time, uuid, csv, datetime
+import hashlib, re, json, os, time, uuid, csv, datetime, pickle
 
 # --------------------
 # App setup
@@ -24,7 +24,23 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def home():
+    return FileResponse("static/home.html")
+
+@app.get("/admin")
+def admin():
     return FileResponse("static/index.html")
+
+@app.get("/signup")
+def signup_page():
+    return FileResponse("static/templates/signup.html")
+
+@app.get("/login")
+def login_page():
+    return FileResponse("static/templates/login.html")
+
+@app.get("/chat")
+def chat_page():
+    return FileResponse("static/chat.html")
 
 
 # --------------------
@@ -36,15 +52,59 @@ def preprocess(text: str) -> str:
     return re.sub(r"[^a-zA-Z0-9\s]", "", text)
 
 def auto_lang(msg: str) -> str:
-    """Auto-detect language from message (simplified: returns 'en' for now)."""
-    # In a real system, use langdetect or textblob
+    """Auto-detect language from message using keyword heuristics.
+
+    Returns language codes used in this app:
+      en - English
+      es - Spanish
+      lg - Luganda
+      sw - Swahili
+      rn - Runyankole
+      ach - Acholi/Luo
+      lg2 - Lango
+      fr - French
+      ar - Arabic
+      hi - Hindi
+      (others default to en)
+    """
     try:
-        # Simple detection: if contains common Spanish words
-        spanish_words = ["el", "la", "de", "que", "y", "a", "en", "es", "se", "del", "para", "con"]
         words = msg.lower().split()
-        spanish_count = sum(1 for w in words if w in spanish_words)
-        if spanish_count > len(words) * 0.3:
+        # Spanish detection
+        spanish_words = ["el", "la", "de", "que", "y", "a", "en", "es", "se", "del", "para", "con"]
+        if sum(1 for w in words if w in spanish_words) > len(words) * 0.3:
             return "es"
+        # Luganda keywords
+        luganda_words = ["kyokka", "nze", "obulimi", "ssebo", "mukyala", "bye" , "ggwe"]
+        if any(w in luganda_words for w in words):
+            return "lg"
+        # Swahili keywords
+        swahili_words = ["sala", "mimi", "kwa", "ni", "jina", "chakula", "sawa"]
+        if any(w in swahili_words for w in words):
+            return "sw"
+        # Runyankole keywords
+        runyankole_words = ["ye", "omuntu", "enkorogoto", "obulimi", "togye"]
+        if any(w in runyankole_words for w in words):
+            return "rn"
+        # Acholi/Luo keywords
+        acholi_words = ["awuok", "anyo", "lul", "kede", "romo", "iny" ]
+        if any(w in acholi_words for w in words):
+            return "ach"
+        # Lango keywords
+        lango_words = ["par", "laber", "pi", "wak", "iyo", "yɛ" ]
+        if any(w in lango_words for w in words):
+            return "lg2"
+        # French keywords
+        french_words = ["bonjour","merci","oui","non","s'il","vous","être"]
+        if any(w in french_words for w in words):
+            return "fr"
+        # Arabic keywords
+        arabic_words = ["مرحبا","شكرا","نعم","لا","زراعة","مزارع"]
+        if any(w in arabic_words for w in words):
+            return "ar"
+        # Hindi keywords
+        hindi_words = ["नमस्ते","धन्यवाद","हाँ","नहीं","कृषि","फसल"]
+        if any(w in hindi_words for w in words):
+            return "hi"
     except:
         pass
     return "en"
@@ -69,9 +129,30 @@ def search_knowledge(question: str) -> str | None:
     try:
         db = SessionLocal()
         clean_q = preprocess(question)
+        
+        # Try exact match first
         result = db.query(Knowledge).filter(Knowledge.question.ilike(f"%{clean_q}%")).first()
+        if result:
+            db.close()
+            return result.answer
+        
+        # Try keyword matching if exact match fails
+        keywords = clean_q.split()
+        best_match = None
+        best_score = 0
+        
+        for kb in db.query(Knowledge).all():
+            kb_text = preprocess(kb.question)
+            kb_words = kb_text.split()
+            
+            # Calculate matching score
+            matches = sum(1 for kw in keywords if kw in kb_words)
+            if matches > best_score:
+                best_score = matches
+                best_match = kb.answer
+        
         db.close()
-        return result.answer if result else None
+        return best_match if best_score > 0 else None
     except Exception as e:
         print(f"Search knowledge error: {e}")
         try:
@@ -80,38 +161,188 @@ def search_knowledge(question: str) -> str | None:
             pass
         return None
 
+def generate_smart_response(msg: str, intent: str, lang: str) -> str:
+    """Generate intelligent response based on intent and message."""
+    msg_lower = msg.lower().strip()
+    
+    # Handle greetings first
+    # expanded to recognize salutations in all supported languages
+    greetings = [
+        "hi", "hello", "hey", "greetings", "good morning", "good afternoon",
+        "good evening", "what's up", "whats up", "how are you", "howdy", "yo",
+        "hola", "buenos", "buenas",               # Spanish
+        "bonjour", "salut", "allo",              # French
+        "مرحبا", "أهلا", "سلام",                  # Arabic
+        "नमस्ते", "नमस्कार", "हैलो",             # Hindi
+        "gyebale", "hujambo", "bwakabona",       # Ugandan greetings
+        "anywak", "kieni"
+    ]
+
+    if any(greeting in msg_lower for greeting in greetings):
+        responses_greetings = {
+            "en": "Hello! I'm here to help with whatever's going on with your crops. Ask me anything.",
+            "es": "¡Hola! Estoy aquí para ayudarte con tus cultivos. Pregúntame lo que necesites.",
+            "lg": "Gyebale! Nja kukuyamba mu bikwata ku bulimi bwo. Nkwogeraiki.",
+            "sw": "Hujambo! Niko hapa kusaidia kuhusu kilimo chako. Uliza chochote.",
+            "rn": "Bwakabona! Ninkusiima kukuyamba ku bulimi bwo. Nyikiriza ekibuuzo.",
+            "ach": "Anywak! Kinyi ne kelo pa i ndeke? Twero kekenal.",
+            "lg2": "Keni! Awe poto ni pi. Nyero kacek.",
+            "fr": "Bonjour! Je suis là pour vous aider avec vos cultures. Demandez-moi ce que vous voulez.",
+            "ar": "مرحبا! أنا هنا لمساعدتك في زراعتك. اسألني أي شيء.",
+            "hi": "नमस्ते! मैं आपकी खेती में मदद के लिए यहाँ हूँ। मुझसे कुछ भी पूछें।"
+        }
+        return responses_greetings.get(lang, responses_greetings["en"])
+    
+    # Handle thank you / appreciation
+    thanks = ["thanks", "thank you", "gracias", "thx", "appreciated", "appreciate it", "thanks so much"]
+    if any(t in msg_lower for t in thanks):
+        responses_thanks = {
+            "en": "No problem at all! That's what I'm here for. Reach out anytime - farming life gets complicated and two heads are better than one.",
+            "es": "¡Sin problema! Para eso estoy aquí. Comunícate en cualquier momento - la vida agrícola es complicada y dos mentes son mejor que una.",
+            "lg": "Tolina kintu! Kino kye nnina okubaweereza. Omanyi okunyumya emirundi gyonna.",
+            "sw": "Hakuna shida! Niko hapa kukusaidia. Uliza wakati wowote.",
+            "rn": "Togenda! Ninkuhereza. Kabiririze emikolo gyonna.",
+            "ach": "Ket ma? Aneno iye. Win kit me tye.",
+            "lg2": "Okato! An iweyo. Nyumara chik.",
+        }
+        return responses_thanks.get(lang, responses_thanks["en"])
+    
+    # Handle yes/no responses
+    yes_words = ["yes", "yeah", "yep", "sure", "okay", "ok", "fine", "si", "sí", "claro"]
+    no_words = ["no", "nope", "nah", "not really", "no gracias"]
+    
+    if any(word in msg_lower for word in yes_words):
+        responses_yes = {
+            "en": "Awesome! Let's dig into it. What's giving you trouble?",
+            "es": "¡Genial! Vamos a profundizar. ¿Qué te está dando problemas?",
+            "lg": "Kikulu! Tujja kulaba. Kiki ekikuwangawo?",
+            "sw": "Vizuri! Tuanzie. Kuna tatizo gani?",
+            "rn": "Enkera! Tugendeeko. Kiki ekikukyungulira?",
+            "ach": "Tye otin! Dwala?",
+            "lg2": "Amwi! Min ma?",
+        }
+        return responses_yes.get(lang, responses_yes["en"])
+    
+    if any(word in msg_lower for word in no_words):
+        responses_no = {
+            "en": "All good. Just holler if you hit a snag later. I'll be around!",
+            "es": "Está bien. ¡Solo grita si tienes problemas luego! Estaré por aquí.",
+            "lg": "Byonna biri bulungi. Osobola kuneenya okumangiramu obuzibu. Nzijja kuba wano!",
+            "sw": "Sawa sawa. Niambie kama kupata shida baadaye. Niko hapa!",
+            "rn": "Byonna bisiima. Wanibainda obunaku obulungi. Ninkuba wano!",
+            "ach": "Bile! Kwena kony? Iko woko!",
+            "lg2": "Onyo! Watt? An iweyo.",
+        
+        }
+        return responses_no.get(lang, responses_no["en"])
+    
+    # Check for specific question keywords
+    if any(word in msg_lower for word in ["how", "what", "why", "when", "where", "can", "should", "do", "help"]):
+        # It's a question - try to find relevant answer
+        kb_answer = search_knowledge(msg)
+        if kb_answer:
+            return kb_answer
+    
+    # Generate contextual response based on intent
+    if intent == "disease":
+        if any(word in msg_lower for word in ["solution", "fix", "treatment", "cure", "prevent"]):
+            return "Okay, so here's what I'd do: First, remove any obviously infected plants - don't want it spreading. Then spray with a fungicide if it's fungal, or an organic option like neem oil. Keep your plants with room to breathe and avoid getting water on the leaves. Next year, try rotating your crops to break the disease cycle."
+        elif any(word in msg_lower for word in ["identify", "recognize", "see", "symptoms", "signs"]):
+            return "Tell me what you're seeing - are the leaves yellowing? Brown spots? Powdery white stuff? Is the stem soft and mushy? The more details you give me, the better I can help you pin down what it is."
+        else:
+            return "Disease problems? That's rough. We can figure this out. The usual suspects are blight, mildew, and various leaf spots. What crops are affected and what do the symptoms look like?"
+    
+    elif intent == "fertilizer":
+        if any(word in msg_lower for word in ["nitrogen", "phosphorus", "potassium", "npk"]):
+            return "So NPK - that's your nitrogen, phosphorus, and potassium. Nitrogen makes plants green and leafy, phosphorus builds strong roots, and potassium keeps plants healthy overall. A 10-10-10 mix works for most situations, but your soil test will tell you if you need to adjust."
+        elif any(word in msg_lower for word in ["soil", "test", "check", "measure"]):
+            return "Honestly, get your soil tested - saves you money in the long run. Your local ag extension office can check it. You want to know your pH (most crops like it between 6 and 7) and what nutrients you're lacking. Game changer."
+        elif any(word in msg_lower for word in ["type", "which", "best", "amount"]):
+            return "You got organic (compost, manure, that kind of thing) or chemical fertilizers. Use what makes sense for your farm. Start with a soil test to know what you need, then apply before planting and maybe once a month during the season."
+        else:
+            return "Fertilizer can be tricky. First move is get your soil tested. What crop are you working with?"
+    
+    elif intent == "irrigation":
+        if any(word in msg_lower for word in ["how much", "how often", "frequency", "amount", "schedule"]):
+            return "Most crops want about 1-2 inches of water a week, but the key is watering deep not daily. You want big roots, not shallow ones. Stick your finger in the soil 4 inches down - if it's dry, water it. Simple as that."
+        elif any(word in msg_lower for word in ["drought", "dry", "water", "rain"]):
+            return "Dry spell? Water early in the morning when it's cool - less waste that way. Throw down some mulch to keep moisture in the soil. Younger plants need it more than established ones. And if you can, drip irrigation is a lifesaver in drought."
+        elif any(word in msg_lower for word in ["method", "type", "system", "spray", "drip"]):
+            return "Drip systems are the most water-efficient. Sprinklers work well if you got the pressure. Flooding's simple but wastes water. Overhead's fine if you gotta keep bugs off. Depends what works for your setup."
+        else:
+            return "Watering's one of those things that takes practice. Tell me - are you letting it dry out between waterings or keeping it soaked?"
+    
+    elif intent == "weather":
+        if any(word in msg_lower for word in ["frost", "freeze", "cold", "temperature"]):
+            return "Frost coming? Get ready early - grab a frost cloth or blanket and get it on those plants before the sun goes down. Water a bit before the freeze, too - sounds weird but it helps. Next year, plant cold-hardy varieties."
+        elif any(word in msg_lower for word in ["rain", "rainfall", "wet", "waterlog"]):
+            return "Too much rain? First, make sure your ground drains okay - raised beds help if you got drainage issues. Don't work the soil when it's soaked - you'll mess up the structure. Raised beds are your friend here."
+        elif any(word in msg_lower for word in ["hot", "heat", "temperature", "sun", "shade"]):
+            return "Heat getting brutal? Shade cloth helps during peak heat, and mulch keeps the soil cooler. Water a bit more during heat waves. And yeah, some crops just handle heat better than others."
+        else:
+            return "Weather can make or break a season. What's the forecast looking like where you are?"
+    
+    elif intent == "harvest":
+        if any(word in msg_lower for word in ["when", "time", "mature", "ready", "ripe"]):
+            return "Timing is everything. Fruits should be fully colored, veggies should be at full size, greens before they bolt. Pick in the morning when it's cool - the produce stays fresher longer. What are you harvesting?"
+        elif any(word in msg_lower for word in ["how", "method", "technique", "proper"]):
+            return "Use clean tools, be gentle so you don't bruise anything, and harvest when it's cool. Handle with care - one bruise and it goes downhill fast."
+        elif any(word in msg_lower for word in ["storage", "keep", "preserve", "fresh"]):
+            return "Cool it down quick after you pick. Store it right - temperature matters, humidity matters. Keep stuff separate if you can, especially fruit that's ripening. Check on it regularly."
+        else:
+            return "Harvest time is exciting. What're you bringing in?"
+    
+    else:  # general intent
+        if "crop" in msg_lower or "plant" in msg_lower or "grow" in msg_lower:
+            return "Growing stuff is always an adventure. What's your question - disease issues, need to fertilize, watering problems, or something else?"
+        elif "soil" in msg_lower:
+            return "Soil's everything in farming. You gotta test it to know what you're working with, add organic stuff to keep it alive, watch your pH. What's going on with yours?"
+        elif "pest" in msg_lower:
+            return "Pests are the worst. First thing is figure out what bug you've actually got. Then you can decide whether to go the natural route or spray. What's bugging your crops?"
+        else:
+            # If we have knowledge base entry, return it
+            kb_answer = search_knowledge(msg)
+            if kb_answer:
+                return kb_answer
+            return "I'm here if you need help. Ask me anything about your farm - pests, diseases, watering, fertilizer, weather... what's on your mind?"
+
 # Default responses for common intents
 responses = {
     "disease": {
-        "en": "I can help with disease management. Please describe the symptoms you're seeing on your crops.",
-        "es": "Puedo ayudar con el manejo de enfermedades. Por favor describe los síntomas que ves en tus cultivos.",
+        "en": "Diseases are no fun. Tell me what you're seeing - I can help.",
+        "es": "Las enfermedades son desagradables. Dime qué estás viendo - puedo ayudar.",
     },
     "fertilizer": {
-        "en": "For fertilizer advice, I recommend checking your soil pH and nutrient levels first.",
-        "es": "Para consejos sobre fertilizantes, recomiendo verificar primero el pH del suelo y los niveles de nutrientes.",
+        "en": "Get your soil tested first - that way you know what you're actually lacking.",
+        "es": "Primero haz un análisis del suelo - así sabrás qué te falta.",
     },
     "irrigation": {
-        "en": "Proper irrigation depends on your crop type and soil conditions. How much rainfall have you had recently?",
-        "es": "El riego adecuado depende del tipo de cultivo y las condiciones del suelo. ¿Cuanta lluvia ha habido recientemente?",
+        "en": "Check your soil - stick your finger 4 inches down and see if it's dry. That's your sign.",
+        "es": "Revisa tu suelo - mete el dedo 4 pulgadas y ve si está seco. Esa es tu señal.",
     },
     "weather": {
-        "en": "Weather can significantly impact crop yields. What region are you farming in?",
-        "es": "El clima puede impactar significativamente los rendimientos. ¿En qué región estás cultivando?",
+        "en": "Weather's one of those things you can't control, but you can prepare for it.",
+        "es": "El clima es algo que no puedes controlar, pero puedes prepararte para ello.",
     },
     "harvest": {
-        "en": "Great question about harvesting! The right time depends on your crop. What are you growing?",
-        "es": "¡Gran pregunta sobre la cosecha! El momento adecuado depende de tu cultivo. ¿Qué estás cultivando?",
+        "en": "Harvest time is when it all pays off. What are you bringing in?",
+        "es": "La cosecha es cuando todo vale la pena. ¿Qué estás recolectando?",
     },
     "general": {
-        "en": "I'm here to help with agricultural questions. What would you like to know?",
-        "es": "Estoy aquí para ayudar con preguntas agrícolas. ¿Qué te gustaría saber?",
+        "en": "I'm here for your farming questions. Shoot.",
+        "es": "Estoy aquí para tus preguntas agrícolas. Adelante.",
     }
 }
 
 # Fallback response if no knowledge base match
 fallback = {
-    "en": "I'm not sure about that. Try asking about diseases, fertilizers, irrigation, weather, or harvest timing.",
-    "es": "No estoy seguro de eso. Intenta preguntar sobre enfermedades, fertilizantes, riego, clima o momento de cosecha.",
+    "en": "Hmm, that one's not in my playbook, but I'm still here to help. Any farming challenges I can tackle?",
+    "es": "Esa no está en mi libro juego, pero sigo aquí para ayudar. ¿Algún desafío agrícola que pueda resolver?",
+    "lg": "Nnyinza okukyusa? Kino tekiri mu gida lyange naye ndyewunyisa okukuyamba. Eyini ekitufu mu bulimi?",
+    "sw": "Huo! Hii haipo katika kitabu changu, lakini niko hapa kusaidia. Kuna shida ya kilimo mail twressa?",
+    "rn": "Kino tekiri mu kyagenda kyange naye nkyopeerera okukuyamba. Ogira ekizibu ky'obulimi?",
+    "ach": "Ka! Iyi ritimo pa anena, toparo kany. En obedo ni?",
+    "lg2": "Keni! Okwero ni pi, laber okwera. Anyineri munyago?",
 }
 
 
@@ -222,21 +453,8 @@ def chat(req: ChatRequest | None = None, message: str | None = None):
         # Detect intent
         intent = detect_intent(msg)
 
-        # Get response
-        reply = ""
-        if intent in responses and lang in responses[intent]:
-            reply = responses[intent][lang]
-        elif intent in responses and "en" in responses[intent]:
-            reply = responses[intent]["en"]
-        else:
-            # Try knowledge base search
-            ans = search_knowledge(msg)
-            if ans:
-                reply = ans
-            elif lang in fallback:
-                reply = fallback[lang]
-            else:
-                reply = fallback.get("en", "I'm not sure about that. Try asking about farming topics.")
+        # Generate intelligent response
+        reply = generate_smart_response(msg, intent, lang)
 
         # Log chat
         try:
@@ -288,6 +506,36 @@ def admin_login(creds: LoginRequest):
 
 @app.post("/admin/logout")
 def admin_logout(x_token: str | None = Header(None)):
+    if x_token and x_token in admin_tokens:
+        del admin_tokens[x_token]
+    return {"ok": True}
+
+
+# --------------------
+# User: login / logout
+# --------------------
+@app.post("/user/login")
+def user_login(creds: LoginRequest):
+    """Authenticate user (not admin) and issue token."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.username == creds.username).first()
+        if not user or user.password != hash_password(creds.password):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        # generate token
+        token = str(uuid.uuid4())
+        admin_tokens[token] = {"username": creds.username, "expires": time.time() + ADMIN_TOKEN_EXP_SECONDS}
+        return {"token": token, "expires_in": ADMIN_TOKEN_EXP_SECONDS, "username": creds.username, "role": user.role}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"User login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+    finally:
+        db.close()
+
+@app.post("/user/logout")
+def user_logout(x_token: str | None = Header(None)):
     if x_token and x_token in admin_tokens:
         del admin_tokens[x_token]
     return {"ok": True}
